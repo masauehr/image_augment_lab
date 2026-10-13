@@ -36,6 +36,12 @@ hymenoptera（アリ vs ハチ）、追試に Flowers102 の一部。詳細は [
 
 - 各Notebook冒頭の `QUICK = True` は1シード実行（短時間）。`QUICK = False` で3シード（MANUAL.mdの記載値と同条件、時間は約3倍）。
 - 共通の道具は [src/nb_utils.py](src/nb_utils.py)（画像表示・複数シード実行・比較表）。学習本体は [src/train.py](src/train.py) の `fit()`。
+- **`ModuleNotFoundError: No module named 'torch'` が出たら**: カーネルがプロジェクトの `.venv` ではない別のPythonになっている。
+  右上のカーネル選択（Cursor/VS Codeでは「Select Kernel」）で **Python (image_augment_lab)** を選ぶ。
+  一覧に無い場合は、次のコマンドで登録する。
+  ```bash
+  .venv/bin/python -m ipykernel install --user --name image_augment_lab --display-name "Python (image_augment_lab)"
+  ```
 - Notebookは結果ファイル（`outputs/results.csv`）を書き換えない。CLI実行（下記）とは独立。
 - 環境変数 `NB_FAST=1` を付けて実行するとエポック数が1/25になり、動作確認だけできる（結果の数値は意味を持たない）。
 

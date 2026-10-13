@@ -35,6 +35,7 @@
 
 - 起動: `.venv/bin/jupyter lab notebooks/`
 - `QUICK = True`（1シード・短時間）/ `False`（3シード・MANUAL.mdの記載値と同条件）。`NB_FAST=1` で動作確認のみ可能。
+- `No module named 'torch'` が出たらカーネル選択で「Python (image_augment_lab)」（`.venv`）を選ぶ。無ければ `.venv/bin/python -m ipykernel install --user --name image_augment_lab --display-name "Python (image_augment_lab)"` で登録する。
 - Notebookは `outputs/results.csv` を書き換えない（CLI実行とは独立）。出力を消した状態でコミットする。
 
 ## 主な拡張操作

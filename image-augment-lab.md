@@ -34,4 +34,8 @@ ColorJitter、グレースケール、ぼかし、ノイズ、Random Erasing、M
 
 ## 現状
 
-2026-10-13: プロジェクト作成、md整備のみ（コード・データ未実装、Phase0未着手）。
+2026-10-13: Phase0（環境構築・データ取得・分割）とPhase1（拡張の可視化）完了。Phase2（ベースライン学習）から着手予定。
+
+- データ: 自前写真は使わず公開データのみ。主データは PyTorch 公式チュートリアルの hymenoptera（アリ vs ハチ、train 243 / val 76 / test 77枚）、追試に Flowers102 の2〜3クラス。
+- スクリプト: `src/prepare_data.py`（取得・分割、シード42固定）、`src/visualize_augment.py`（拡張ギャラリー出力）。
+- 実行環境: Python 3.14 + torch 2.14.1 / torchvision 0.29.1、Apple Silicon の MPS 利用可。

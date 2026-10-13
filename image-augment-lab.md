@@ -33,6 +33,7 @@
 | 04_ablation | Phase4 アブレーション・学習枚数 | 約15分 |
 | 05_advanced | Phase5 自動拡張・Mixup/CutMix・転移学習 | 約15分 |
 
+- Notebookを実行しなくても、`notebooks/README.md` に各Notebookの結果（図・表・読み取れること）をまとめてある（予習・答え合わせ用）。
 - 起動: `.venv/bin/jupyter lab notebooks/`
 - `QUICK = True`（1シード・短時間）/ `False`（3シード・MANUAL.mdの記載値と同条件）。`NB_FAST=1` で動作確認のみ可能。
 - `No module named 'torch'` が出たらカーネル選択で「Python (image_augment_lab)」（`.venv`）を選ぶ。無ければ `.venv/bin/python -m ipykernel install --user --name image_augment_lab --display-name "Python (image_augment_lab)"` で登録する。

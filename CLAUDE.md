@@ -17,7 +17,8 @@
 - Notebookは**初心者向け**に書く。冒頭に「ゴール・前のNotebookとのつながり・やること」、各コードの前に「何をして何のためか」、後に「出力の見方」を置く。
   用語は Notebook 00 の用語集に集約し、「試してみよう」は**変更する場所・変更後の値・見るポイント・分かること**まで具体的に書く（曖昧な指示にしない）。
 - Notebookは**出力を消した状態でコミット**する（画像でリポジトリが肥大化するため）。実行確認は `NB_FAST=1` で行う。
-- 実験条件や結果を変えたら、Notebook内の「結果の読み方」の記載値と [MANUAL.md](MANUAL.md) の数値を揃える。
+- 実験条件や結果を変えたら、Notebook内の「結果の読み方」の記載値、[MANUAL.md](MANUAL.md)、[notebooks/README.md](notebooks/README.md)（結果の図・表）の数値を揃える。
+- `notebooks/README.md` の表は `outputs/results.csv`（3シード平均）から集計し、図は `notebooks/images/` に置く。
 
 ## 技術スタック
 - Python 3.x / PyTorch / torchvision（`torchvision.transforms.v2`）/ matplotlib / pandas / Jupyter

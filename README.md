@@ -20,6 +20,7 @@ hymenoptera（アリ vs ハチ）、追試に Flowers102 の一部。詳細は [
 ## Notebookで学びながら実行する（推奨）
 
 各フェーズを解説付きのJupyter Notebookにしてあります。上から順に実行しながら読み進めてください。
+実行しなくても、**各Notebookの結果（図・表・読み取れること）を [notebooks/README.md](notebooks/README.md) で一通り読めます**（予習・答え合わせ用）。
 
 | Notebook | フェーズ | 学ぶこと | 目安時間 |
 |---|---|---|---|
@@ -84,7 +85,7 @@ image_augment_lab/
 ├── data/
 │   ├── raw/           # 元画像（git管理外）
 │   └── processed/     # train/val/test分割済みデータ（git管理外）
-├── notebooks/         # 解説付き学習Notebook（00〜05、フェーズ順）
+├── notebooks/         # 解説付き学習Notebook（00〜05、フェーズ順）。README.mdに実行結果まとめ、images/に図
 ├── src/               # prepare_data.py（取得・分割）/ visualize_augment.py（拡張の可視化）/ train.py（学習・比較。fit()をNotebookからも利用）/ nb_utils.py（Notebook用道具箱）/ run_phase4.sh / run_phase5.sh（実験の一括実行）
 └── outputs/           # 学習曲線・比較表・サンプル画像（git管理外）
 ```

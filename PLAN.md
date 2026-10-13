@@ -83,3 +83,4 @@
 - 2026-10-13: Phase5完了。RandAugment/切り抜きが有効、Mixup/CutMixは小CNNで逆効果、転移学習が最大の改善要因（test 0.70→0.89、拡張でさらに0.94）
 - 2026-10-13: 全フェーズをJupyter Notebook化（00〜05）。train.pyにfit()/plot_history()/summarize()を切り出し
 - 2026-10-13: Notebookを初心者向けに全面改訂。00に演習全体のゴール・全体像・用語集・Jupyterの使い方を追加。各セルに目的と出力の見方、演習は変更箇所と期待する観察まで具体化
+- 2026-10-13: notebooks/README.md を追加（各Notebookの目的・実行結果の図表・読み取れること・演習・指針）。数値はresults.csvから集計、図は notebooks/images/

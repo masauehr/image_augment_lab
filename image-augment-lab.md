@@ -71,3 +71,8 @@ ColorJitter、グレースケール、ぼかし、ノイズ、Random Erasing、M
 - 一括実行: `bash src/run_phase4.sh`（アブレーション・枚数）/ `bash src/run_phase5.sh`（発展手法・転移学習）
 - `src/nb_utils.py`: Notebook共通の道具箱（画像表示・複数シード実行・比較表）。`src/train.py` に `fit()` / `plot_history()` / `summarize()` を切り出し、CLIとNotebookで共用。
 - 実行環境: Python 3.14 + torch 2.14.1 / torchvision 0.29.1、Apple Silicon の MPS 利用可。
+
+## 次のステップ（検討中）
+
+詳細は PLAN.md の「次のステップ」を参照。推奨順は **A 評価を固める**（交差検証・混同行列・Grad-CAM）→ **B 予測・検証システム化**（モデル保存・推論スクリプト・確信度・検証レポート）→ **C 気象への応用**（台風・天気図）。
+気象では**左右反転が物理的に誤り**（台風の回転方向が逆になる）など、「ラベルを壊す拡張は使えない」の実践になる。B・Cは別プロジェクトとして作る案が有力。

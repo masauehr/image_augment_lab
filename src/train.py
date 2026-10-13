@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision import datasets
 from torchvision.transforms import v2
 
@@ -77,6 +77,16 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
 
 
+def subsample(ds, n_per_class: int, seed: int) -> Subset:
+    """クラスごとにn枚をシード付きで無作為抽出する（学習データ枚数の影響を見る用）"""
+    rng = random.Random(seed)
+    idx = []
+    for c in range(len(ds.classes)):
+        members = [i for i, (_, y) in enumerate(ds.samples) if y == c]
+        idx += rng.sample(members, min(n_per_class, len(members)))
+    return Subset(ds, idx)
+
+
 def run_epoch(model, loader, device, loss_fn, optimizer=None):
     """optimizerありなら学習、なしなら評価。(loss, acc)を返す"""
     model.train(optimizer is not None)
@@ -103,11 +113,17 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--batch", type=int, default=32)
+    ap.add_argument("--n_per_class", type=int, default=0, help="学習データのクラスあたり枚数（0=全部）")
     a = ap.parse_args()
 
     set_seed(a.seed)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     train_ds = datasets.ImageFolder(DATA / "train", make_transform(a.aug))
+    if a.n_per_class:
+        train_ds_full = train_ds
+        train_ds = subsample(train_ds, a.n_per_class, a.seed)
+    else:
+        train_ds_full = train_ds
     val_ds = datasets.ImageFolder(DATA / "val", make_transform(None))
     test_ds = datasets.ImageFolder(DATA / "test", make_transform(None))
     g = torch.Generator().manual_seed(a.seed)
@@ -115,7 +131,7 @@ def main() -> None:
     val_dl = DataLoader(val_ds, a.batch)
     test_dl = DataLoader(test_ds, a.batch)
 
-    model = SmallCNN(len(train_ds.classes)).to(device)
+    model = SmallCNN(len(train_ds_full.classes)).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=a.lr)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -129,7 +145,7 @@ def main() -> None:
     _, test_acc = run_epoch(model, test_dl, device, loss_fn)
 
     OUT.mkdir(exist_ok=True)
-    tag = f"{a.aug}_seed{a.seed}"
+    tag = f"{a.aug}_seed{a.seed}" + (f"_n{a.n_per_class}" if a.n_per_class else "")
     with open(OUT / f"{tag}_history.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=hist[0].keys())
         w.writeheader()
@@ -146,7 +162,7 @@ def main() -> None:
     for x in ax:
         x.legend()
         x.grid(alpha=0.3)
-    fig.suptitle(f"aug={a.aug} seed={a.seed}")
+    fig.suptitle(f"aug={a.aug} seed={a.seed} n/class={a.n_per_class or '全部'}")
     fig.tight_layout()
     fig.savefig(OUT / f"{tag}_curve.png", dpi=100)
 
@@ -156,8 +172,8 @@ def main() -> None:
     with open(res, "a", newline="") as f:
         w = csv.writer(f)
         if new:
-            w.writerow(["aug", "seed", "epochs", "train_acc", "val_acc", "test_acc", "gap(train-val)"])
-        w.writerow([a.aug, a.seed, a.epochs, f"{last['train_acc']:.3f}", f"{last['val_acc']:.3f}",
+            w.writerow(["aug", "seed", "epochs", "n_per_class", "train_acc", "val_acc", "test_acc", "gap(train-val)"])
+        w.writerow([a.aug, a.seed, a.epochs, a.n_per_class or "all", f"{last['train_acc']:.3f}", f"{last['val_acc']:.3f}",
                     f"{test_acc:.3f}", f"{last['train_acc'] - last['val_acc']:.3f}"])
     print(f"最終: train {last['train_acc']:.3f} val {last['val_acc']:.3f} test {test_acc:.3f}")
 

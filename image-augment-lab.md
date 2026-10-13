@@ -34,10 +34,14 @@ ColorJitter、グレースケール、ぼかし、ノイズ、Random Erasing、M
 
 ## 現状
 
-2026-10-13: Phase0（環境構築・データ取得・分割）・Phase1（拡張の可視化）・Phase2（拡張なしベースライン）完了。Phase3（拡張あり比較）から着手予定。
+2026-10-13: Phase0（環境構築・データ取得・分割）・Phase1（拡張の可視化）・Phase2（拡張なしベースライン）・Phase3（拡張あり比較）完了。Phase4（アブレーション）から着手予定。
 
 - データ: 自前写真は使わず公開データのみ。主データは PyTorch 公式チュートリアルの hymenoptera（アリ vs ハチ、train 243 / val 76 / test 77枚）、追試に Flowers102 の2〜3クラス。
 - スクリプト: `src/prepare_data.py`（取得・分割、シード42固定）、`src/visualize_augment.py`（拡張ギャラリー出力）。
 - `src/train.py`: SmallCNN（畳み込み3層）で学習。`--aug none|flip|crop|color|basic --seed N --epochs N`。結果は `outputs/results.csv` に追記。
 - ベースライン（拡張なし, 3シード平均）: train 0.859 / val 0.719 / test 0.809。train-val差は約0.14で、val lossが下がらず過学習を確認。valが約76枚と少なくシード間ばらつきが大きいため、比較は複数シードで行う。
+- 拡張あり(basic: 切り抜き+反転+色調) vs なし（3シード平均、最終エポック）:
+  - 60エポック: val 0.715 vs 0.719、test 0.757 vs 0.809（拡張ありは学習が遅く差が出ない）
+  - 150エポック: val 0.732 vs 0.711、test 0.796 vs 0.701、train-val差 0.089 vs 0.235（拡張の効果が現れる）
+  - 教訓: 拡張は過学習を抑える代わりに収束が遅い。十分な長さ学習してから比較する。
 - 実行環境: Python 3.14 + torch 2.14.1 / torchvision 0.29.1、Apple Silicon の MPS 利用可。

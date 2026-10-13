@@ -34,8 +34,10 @@ ColorJitter、グレースケール、ぼかし、ノイズ、Random Erasing、M
 
 ## 現状
 
-2026-10-13: Phase0（環境構築・データ取得・分割）とPhase1（拡張の可視化）完了。Phase2（ベースライン学習）から着手予定。
+2026-10-13: Phase0（環境構築・データ取得・分割）・Phase1（拡張の可視化）・Phase2（拡張なしベースライン）完了。Phase3（拡張あり比較）から着手予定。
 
 - データ: 自前写真は使わず公開データのみ。主データは PyTorch 公式チュートリアルの hymenoptera（アリ vs ハチ、train 243 / val 76 / test 77枚）、追試に Flowers102 の2〜3クラス。
 - スクリプト: `src/prepare_data.py`（取得・分割、シード42固定）、`src/visualize_augment.py`（拡張ギャラリー出力）。
+- `src/train.py`: SmallCNN（畳み込み3層）で学習。`--aug none|flip|crop|color|basic --seed N --epochs N`。結果は `outputs/results.csv` に追記。
+- ベースライン（拡張なし, 3シード平均）: train 0.859 / val 0.719 / test 0.809。train-val差は約0.14で、val lossが下がらず過学習を確認。valが約76枚と少なくシード間ばらつきが大きいため、比較は複数シードで行う。
 - 実行環境: Python 3.14 + torch 2.14.1 / torchvision 0.29.1、Apple Silicon の MPS 利用可。

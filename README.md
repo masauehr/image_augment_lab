@@ -23,6 +23,7 @@ hymenoptera（アリ vs ハチ）、追試に Flowers102 の一部。詳細は [
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python src/prepare_data.py       # データ取得・train/val/test分割
 .venv/bin/python src/visualize_augment.py  # 拡張ギャラリー → outputs/augment_gallery.png
+.venv/bin/python src/train.py --aug none --seed 0 --epochs 60   # 学習（--aug none/flip/crop/color/basic）
 ```
 
 ## 方針
@@ -56,7 +57,7 @@ image_augment_lab/
 │   ├── raw/           # 元画像（git管理外）
 │   └── processed/     # train/val/test分割済みデータ（git管理外）
 ├── notebooks/         # 可視化・実験用notebook
-├── src/               # prepare_data.py（取得・分割）/ visualize_augment.py（拡張の可視化）
+├── src/               # prepare_data.py（取得・分割）/ visualize_augment.py（拡張の可視化）/ train.py（学習・比較）
 └── outputs/           # 学習曲線・比較表・サンプル画像（git管理外）
 ```
 

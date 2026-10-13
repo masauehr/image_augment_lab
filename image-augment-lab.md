@@ -22,7 +22,7 @@
 
 ## Notebookで学ぶ
 
-全フェーズを解説付きのJupyter Notebookにしてある（`notebooks/00_setup_data` 〜 `05_advanced`）。上から順に実行しながら読み進める。
+全フェーズを初心者向けの解説付きJupyter Notebookにしてある（00に演習全体のゴール・用語集あり。各演習は変更箇所と観察ポイントまで具体的に記載）（`notebooks/00_setup_data` 〜 `05_advanced`）。上から順に実行しながら読み進める。
 
 | Notebook | フェーズ | 目安時間 |
 |---|---|---|

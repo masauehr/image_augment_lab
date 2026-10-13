@@ -20,6 +20,23 @@
 | 4 | 拡張の種類ごとのアブレーション、データ枚数を変えた効果検証 |
 | 5 | RandAugment / Mixup / CutMix、転移学習との併用、落とし穴の整理（完了） |
 
+## Notebookで学ぶ
+
+全フェーズを解説付きのJupyter Notebookにしてある（`notebooks/00_setup_data` 〜 `05_advanced`）。上から順に実行しながら読み進める。
+
+| Notebook | フェーズ | 目安時間 |
+|---|---|---|
+| 00_setup_data | Phase0 データ取得・分割・リーク確認 | 1〜2分 |
+| 01_visualize_augment | Phase1 拡張の可視化・強さの違い | 1分 |
+| 02_baseline | Phase2 ベースライン・過学習 | 1〜2分 |
+| 03_augment_vs_none | Phase3 拡張あり/なし比較 | 約3分 |
+| 04_ablation | Phase4 アブレーション・学習枚数 | 約15分 |
+| 05_advanced | Phase5 自動拡張・Mixup/CutMix・転移学習 | 約15分 |
+
+- 起動: `.venv/bin/jupyter lab notebooks/`
+- `QUICK = True`（1シード・短時間）/ `False`（3シード・MANUAL.mdの記載値と同条件）。`NB_FAST=1` で動作確認のみ可能。
+- Notebookは `outputs/results.csv` を書き換えない（CLI実行とは独立）。出力を消した状態でコミットする。
+
 ## 主な拡張操作
 
 反転（水平/垂直）、回転、ランダム切り抜き+拡大（RandomResizedCrop）、アフィン変換、
@@ -50,4 +67,5 @@ ColorJitter、グレースケール、ぼかし、ノイズ、Random Erasing、M
 - 転移学習（ImageNet事前学習ResNet18）: 拡張なしでtest 0.892（ゼロから学習の0.701から+19pt）、切り抜き+反転で0.939。クラス10枚でも0.78〜0.81（ゼロから学習は0.64）。少量データでは転移学習が最大の改善要因で、拡張は上積み。
 - 指針: ①まず転移学習 ②拡張は切り抜き+反転から ③迷えばRandAugment ④1種類ずつ試す ⑤十分なエポックで比較 ⑥複数シード平均で比べる（詳細は MANUAL.md「実験から得た実践的な指針」）。
 - 一括実行: `bash src/run_phase4.sh`（アブレーション・枚数）/ `bash src/run_phase5.sh`（発展手法・転移学習）
+- `src/nb_utils.py`: Notebook共通の道具箱（画像表示・複数シード実行・比較表）。`src/train.py` に `fit()` / `plot_history()` / `summarize()` を切り出し、CLIとNotebookで共用。
 - 実行環境: Python 3.14 + torch 2.14.1 / torchvision 0.29.1、Apple Silicon の MPS 利用可。

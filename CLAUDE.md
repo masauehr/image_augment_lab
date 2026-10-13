@@ -12,6 +12,11 @@
 - データ分割（train/val/test）は拡張の**前**に行い、同一画像由来の派生画像が分割をまたがないようにする。
 - 新しい拡張を試したら、効果の有無と理由を [MANUAL.md](MANUAL.md) に追記してノウハウとして蓄積する。
 
+## Notebook
+- `notebooks/` の学習用Notebook（00〜05）は、フェーズ順に解説付きで実行できる。共通処理は `src/nb_utils.py`、学習本体は `src/train.py` の `fit()`。
+- Notebookは**出力を消した状態でコミット**する（画像でリポジトリが肥大化するため）。実行確認は `NB_FAST=1` で行う。
+- 実験条件や結果を変えたら、Notebook内の「結果の読み方」の記載値と [MANUAL.md](MANUAL.md) の数値を揃える。
+
 ## 技術スタック
 - Python 3.x / PyTorch / torchvision（`torchvision.transforms.v2`）/ matplotlib / pandas / Jupyter
 - 実行環境は CPU または Apple Silicon（MPS）。GPU前提にしない。

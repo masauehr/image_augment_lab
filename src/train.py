@@ -121,6 +121,74 @@ def run_epoch(model, loader, device, loss_fn, optimizer=None, mixer=None):
     return total_loss / n, correct / n
 
 
+def fit(aug="none", seed=0, epochs=30, lr=1e-3, batch=32, n_per_class=0, model_name="small", mix="none", verbose=True):
+    """学習を1回実行し、結果をdictで返す（CLIとNotebookの共通処理）。
+
+    返り値: dict(hist=エポックごとの履歴, test_acc, label, tag, model, aug, seed, epochs, n_per_class, model_obj)
+    """
+    set_seed(seed)
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    train_ds_full = datasets.ImageFolder(DATA / "train", make_transform(aug))
+    train_ds = subsample(train_ds_full, n_per_class, seed) if n_per_class else train_ds_full
+    val_ds = datasets.ImageFolder(DATA / "val", make_transform(None))
+    test_ds = datasets.ImageFolder(DATA / "test", make_transform(None))
+    g = torch.Generator().manual_seed(seed)
+    train_dl = DataLoader(train_ds, batch, shuffle=True, generator=g)
+    val_dl = DataLoader(val_ds, batch)
+    test_dl = DataLoader(test_ds, batch)
+
+    n_cls = len(train_ds_full.classes)
+    model = make_model(model_name, n_cls).to(device)
+    mixer = {"none": None, "mixup": v2.MixUp(num_classes=n_cls), "cutmix": v2.CutMix(num_classes=n_cls)}[mix]
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    loss_fn = nn.CrossEntropyLoss()
+
+    hist = []
+    for ep in range(1, epochs + 1):
+        tl, ta = run_epoch(model, train_dl, device, loss_fn, opt, mixer)
+        vl, va = run_epoch(model, val_dl, device, loss_fn)
+        hist.append(dict(epoch=ep, train_loss=tl, train_acc=ta, val_loss=vl, val_acc=va))
+        if verbose:
+            print(f"ep{ep:3d} train {tl:.3f}/{ta:.3f}  val {vl:.3f}/{va:.3f}")
+    # testは最終エポックのモデルで1回だけ評価（test結果でエポックを選ばない）
+    _, test_acc = run_epoch(model, test_dl, device, loss_fn)
+
+    label = aug + ("" if mix == "none" else f"+{mix}")
+    tag = ("" if model_name == "small" else f"{model_name}_") + f"{label}_seed{seed}" + (f"_n{n_per_class}" if n_per_class else "")
+    return dict(hist=hist, test_acc=test_acc, label=label, tag=tag, model=model_name, aug=aug, seed=seed,
+                epochs=epochs, n_per_class=n_per_class, model_obj=model)
+
+
+def plot_history(r: dict, path: Path | None = None):
+    """学習曲線（loss・精度）を描く。pathを渡すと画像として保存する"""
+    hist = r["hist"]
+    ep = [h["epoch"] for h in hist]
+    fig, ax = plt.subplots(1, 2, figsize=(10, 3.8))
+    ax[0].plot(ep, [h["train_loss"] for h in hist], label="train")
+    ax[0].plot(ep, [h["val_loss"] for h in hist], label="val")
+    ax[0].set(title="loss", xlabel="epoch")
+    ax[1].plot(ep, [h["train_acc"] for h in hist], label="train")
+    ax[1].plot(ep, [h["val_acc"] for h in hist], label="val")
+    ax[1].set(title="精度", xlabel="epoch", ylim=(0.4, 1.02))
+    for x in ax:
+        x.legend()
+        x.grid(alpha=0.3)
+    fig.suptitle(f"{r['model']} aug={r['label']} seed={r['seed']} n/class={r['n_per_class'] or '全部'}")
+    fig.tight_layout()
+    if path is not None:
+        fig.savefig(path, dpi=100)
+    return fig
+
+
+def summarize(r: dict) -> dict:
+    """1回の実行結果を、比較表の1行（dict）にまとめる"""
+    last = r["hist"][-1]
+    return dict(model=r["model"], aug=r["label"], seed=r["seed"], epochs=r["epochs"],
+                n_per_class=r["n_per_class"] or "all", train_acc=round(last["train_acc"], 3),
+                val_acc=round(last["val_acc"], 3), test_acc=round(r["test_acc"], 3),
+                gap=round(last["train_acc"] - last["val_acc"], 3))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--aug", choices=AUG_SETS, default="none")
@@ -133,58 +201,15 @@ def main() -> None:
     ap.add_argument("--n_per_class", type=int, default=0, help="学習データのクラスあたり枚数（0=全部）")
     a = ap.parse_args()
 
-    set_seed(a.seed)
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    train_ds = datasets.ImageFolder(DATA / "train", make_transform(a.aug))
-    if a.n_per_class:
-        train_ds_full = train_ds
-        train_ds = subsample(train_ds, a.n_per_class, a.seed)
-    else:
-        train_ds_full = train_ds
-    val_ds = datasets.ImageFolder(DATA / "val", make_transform(None))
-    test_ds = datasets.ImageFolder(DATA / "test", make_transform(None))
-    g = torch.Generator().manual_seed(a.seed)
-    train_dl = DataLoader(train_ds, a.batch, shuffle=True, generator=g)
-    val_dl = DataLoader(val_ds, a.batch)
-    test_dl = DataLoader(test_ds, a.batch)
-
-    n_cls = len(train_ds_full.classes)
-    model = make_model(a.model, n_cls).to(device)
-    mixer = {"none": None, "mixup": v2.MixUp(num_classes=n_cls), "cutmix": v2.CutMix(num_classes=n_cls)}[a.mix]
-    opt = torch.optim.Adam(model.parameters(), lr=a.lr)
-    loss_fn = nn.CrossEntropyLoss()
-
-    hist = []
-    for ep in range(1, a.epochs + 1):
-        tl, ta = run_epoch(model, train_dl, device, loss_fn, opt, mixer)
-        vl, va = run_epoch(model, val_dl, device, loss_fn)
-        hist.append(dict(epoch=ep, train_loss=tl, train_acc=ta, val_loss=vl, val_acc=va))
-        print(f"ep{ep:3d} train {tl:.3f}/{ta:.3f}  val {vl:.3f}/{va:.3f}")
-    # testは最終エポックのモデルで1回だけ評価（test結果でエポックを選ばない）
-    _, test_acc = run_epoch(model, test_dl, device, loss_fn)
+    r = fit(a.aug, a.seed, a.epochs, a.lr, a.batch, a.n_per_class, a.model, a.mix)
+    hist, tag = r["hist"], r["tag"]
 
     OUT.mkdir(exist_ok=True)
-    label = a.aug + ("" if a.mix == "none" else f"+{a.mix}")
-    tag = ("" if a.model == "small" else f"{a.model}_") + f"{label}_seed{a.seed}" + (f"_n{a.n_per_class}" if a.n_per_class else "")
     with open(OUT / f"{tag}_history.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=hist[0].keys())
         w.writeheader()
         w.writerows(hist)
-
-    ep = [h["epoch"] for h in hist]
-    fig, ax = plt.subplots(1, 2, figsize=(10, 3.8))
-    ax[0].plot(ep, [h["train_loss"] for h in hist], label="train")
-    ax[0].plot(ep, [h["val_loss"] for h in hist], label="val")
-    ax[0].set(title="loss", xlabel="epoch")
-    ax[1].plot(ep, [h["train_acc"] for h in hist], label="train")
-    ax[1].plot(ep, [h["val_acc"] for h in hist], label="val")
-    ax[1].set(title="精度", xlabel="epoch", ylim=(0.4, 1.02))
-    for x in ax:
-        x.legend()
-        x.grid(alpha=0.3)
-    fig.suptitle(f"{a.model} aug={label} seed={a.seed} n/class={a.n_per_class or '全部'}")
-    fig.tight_layout()
-    fig.savefig(OUT / f"{tag}_curve.png", dpi=100)
+    plot_history(r, OUT / f"{tag}_curve.png")
 
     last = hist[-1]
     res = OUT / "results.csv"
@@ -193,9 +218,9 @@ def main() -> None:
         w = csv.writer(f)
         if new:
             w.writerow(["model", "aug", "seed", "epochs", "n_per_class", "train_acc", "val_acc", "test_acc", "gap(train-val)"])
-        w.writerow([a.model, label, a.seed, a.epochs, a.n_per_class or "all", f"{last['train_acc']:.3f}", f"{last['val_acc']:.3f}",
-                    f"{test_acc:.3f}", f"{last['train_acc'] - last['val_acc']:.3f}"])
-    print(f"最終: train {last['train_acc']:.3f} val {last['val_acc']:.3f} test {test_acc:.3f}")
+        w.writerow([a.model, r["label"], a.seed, a.epochs, a.n_per_class or "all", f"{last['train_acc']:.3f}",
+                    f"{last['val_acc']:.3f}", f"{r['test_acc']:.3f}", f"{last['train_acc'] - last['val_acc']:.3f}"])
+    print(f"最終: train {last['train_acc']:.3f} val {last['val_acc']:.3f} test {r['test_acc']:.3f}")
 
 
 if __name__ == "__main__":
